@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Background color -->
+  <!-- <rect width="100%" height="100%" fill="#000000"></rect> -->
+
+  <!-- Logo Group -->
+  <g id="logo-group">
+    <g id="logo-center" transform="translate(0 0)">
+      <g id="title">
+        <path d="m 512.15244,-31.176 -13.032,23.328 0.072,7.848 h 13.104 z M 453.68844,0 h 13.176 v -6.984 l -13.176,-23.544 z m 46.728,-50.4 -17.28,29.088 -17.712,-29.088 h -11.736 l 13.176,24.408 12.888,21.024 h 6.336 l 12.96,-21.744 12.744,-23.688 z"
+              fill="#5f5f5f" transform="translate(0 434.8) translate(50 -202) scale(6.1) translate(-453.68844 50.4)"></path>
+
+        <path d="m 522.31344,0 h 13.968 v -8.496 l -13.968,-17.784 z m 33.984,-50.4 v 9.144 l 13.968,16.848 V -50.4 Z m 0,26.856 -22.248,-26.856 h -11.736 v 6.696 l 13.968,16.848 22.248,26.856 h 11.736 v -5.832 l -13.968,-17.784 z"
+              fill="#73013e" transform="translate(0 434.8) translate(404.75 -202) scale(6.1) translate(-522.31344 50.4)"></path>
+      </g>
+    </g>
+  </g>
+</svg>
