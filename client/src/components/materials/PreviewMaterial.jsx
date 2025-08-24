@@ -52,46 +52,58 @@ const PreviewMaterial = () => {
     }
 
     try {
+      let fileName;
+    
       if (materialInfo.type === "image") {
-        // download image file
+        // Extract filename from URL
+        const urlParts = materialInfo.content.split("/");
+        fileName = urlParts[urlParts.length - 1]; // e.g., MarioNation-xxxx.jpg
+      } else if (materialInfo.type === "text") {
+        fileName = materialInfo.title
+          ? `${materialInfo.title}.txt`
+          : `MarioNation-${Date.now()}.txt`;
+      } else {
+        fileName = `download-${Date.now()}`;
+      }
+    
+      // Show confirm dialog with the actual filename
+      if (!confirm(`Do you want to download "${fileName}"?`)) return;
+    
+      if (materialInfo.type === "image") {
         const response = await fetch(materialInfo.content);
         if (!response.ok) throw new Error("Network response was not ok");
-
+    
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
-
+    
         const link = document.createElement("a");
         link.href = blobUrl;
-        link.download = materialInfo.title
-          ? `${materialInfo.title}.jpg`
-          : "download.jpg";
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
+    
         URL.revokeObjectURL(blobUrl);
+    
       } else if (materialInfo.type === "text") {
-        // download as txt file
         const blob = new Blob([materialInfo.content], {
           type: "text/plain;charset=utf-8",
         });
         const blobUrl = URL.createObjectURL(blob);
-
+    
         const link = document.createElement("a");
         link.href = blobUrl;
-        link.download = materialInfo.title
-          ? `${materialInfo.title}.txt`
-          : "download.txt";
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
+    
         URL.revokeObjectURL(blobUrl);
       }
     } catch (err) {
       console.error("❌ Download failed:", err);
       alert("Download failed. Please try again.");
-    }
+    }    
   };
 
   // fullscreen toggle for images
