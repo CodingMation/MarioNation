@@ -199,7 +199,7 @@ const ChapterDashboard = () => {
                                                 <Link to={`/previewmaterial/${item._id}`}>
                                                     <h3 className="font-semibold text-lg mb-1 hover:underline">{item.type}</h3>
                                                 </Link>
-                                                <p className="text-gray-400 text-xs">
+                                                <p className="text-gray-500 italic text-xs truncate max-w-[150px]">
                                                     {item.content}
                                                 </p>
                                             </div>

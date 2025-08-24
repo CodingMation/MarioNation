@@ -1,6 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-
+const { deleteFromCloudinary } = require("../middleware/upload");
 const Subject = require("../models/Subject");
 const Chapter = require("../models/Chapter");
 const Exercise = require("../models/Exercise");
@@ -84,25 +82,35 @@ const deleteSubject = async (req, res) => {
     if (!subject) {
       return res.status(404).json({ success: false, msg: "Subject not found" });
     }
+
     // --- Get all chapters of the subject ---
     const chapters = await Chapter.find({ subjectId: id });
+
+    // --- Get all exercises under those chapters ---
     const exercises = await Exercise.find({
       chapterId: { $in: chapters.map((c) => c._id) },
     });
-    const materials = await Material.find({ subjectId: id });
 
-    // --- Delete files from uploads/materials ---
+    // --- Get all materials linked to subject or exercises ---
+    const materials = await Material.find({
+      $or: [
+        { subjectId: id },
+        { chapterId: { $in: chapters.map((c) => c._id) } },
+        { exerciseId: { $in: exercises.map((e) => e._id) } },
+      ],
+    });
+
+    // --- Delete files from Cloudinary ---
     for (const material of materials) {
-      if (material.type !== "text" && material.content) {
-        const filePath = path.join(
-          process.cwd(),
-          "uploads/materials/",
-          material.content
-        );
+      if (material.type !== "text" && material.publicId) {
+        const resourceType = material.type === "image" ? "image" : "raw";
         try {
-          if (fs.existsSync(filePath)) fs.rmSync(filePath);
+          await deleteFromCloudinary(material.publicId, resourceType);
         } catch (err) {
-          console.error("Failed to delete file:", filePath, err);
+          console.error(
+            `Failed to delete material ${material._id} from Cloudinary:`,
+            err.message
+          );
         }
       }
     }

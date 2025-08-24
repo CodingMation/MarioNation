@@ -1,10 +1,9 @@
-const fs = require("fs");
-const path = require("path");
-
+const { deleteFromCloudinary } = require("../middleware/upload");
 const Subject = require("../models/Subject");
 const Chapter = require("../models/Chapter");
 const Exercise = require("../models/Exercise");
 const Material = require("../models/Material");
+
 
 // ---------------- CONTROLLERS ----------------
 
@@ -117,18 +116,14 @@ const deleteChapter = async (req, res) => {
       ],
     });
 
-    // --- Delete files from uploads/materials ---
+    // --- Delete files from Cloudinary ---
     for (const material of materials) {
-      if (material.type !== "text" && material.content) {
-        const filePath = path.join(
-          process.cwd(),
-          "uploads/materials/",
-          material.content
-        );
+      if (material.type !== "text" && material.publicId) {
+        const resourceType = material.type === "image" ? "image" : "raw";
         try {
-          if (fs.existsSync(filePath)) fs.rmSync(filePath);
+          await deleteFromCloudinary(material.publicId, resourceType);
         } catch (err) {
-          console.error("Failed to delete file:", filePath, err);
+          console.error(`Failed to delete material ${material._id} from Cloudinary:`, err.message);
         }
       }
     }
@@ -151,7 +146,6 @@ const deleteChapter = async (req, res) => {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
-
 
 module.exports = {
   addChapter,

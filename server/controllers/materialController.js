@@ -1,7 +1,8 @@
-// controllers/materialController.js
 const Material = require("../models/Material");
-const fs = require("fs");
-const path = require("path");
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} = require("../middleware/upload");
 
 // ---------------- ADD MATERIAL ----------------
 const addMaterial = async (req, res) => {
@@ -28,11 +29,27 @@ const addMaterial = async (req, res) => {
       });
     }
 
+    let fileUrl = null;
+    let publicId = null;
+    let resourceType = null;
+
+    if (req.file) {
+      const uniqueSuffix = Math.floor(Math.random() * 10e5);
+      const uniqueId = "MarioNation-" + Date.now() + "_" + uniqueSuffix;
+      const result = await uploadToCloudinary(req.file.buffer, "materials", uniqueId);
+
+      fileUrl = result.secure_url;
+      publicId = result.public_id;
+      resourceType = result.resource_type;
+    }
+
     const newMaterial = new Material({
       materialType,
       ...materialData,
       type,
-      content: req.file ? `${req.file.filename}` : content || null,
+      content: fileUrl || content || null,
+      publicId: publicId || null,
+      resourceType: resourceType || null, // 🔥 store in DB
     });
 
     await newMaterial.save();
@@ -47,7 +64,6 @@ const addMaterial = async (req, res) => {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
-
 
 // ---------------- GET MATERIALS (by subject/chapter/exercise) ----------------
 const getMaterials = async (req, res) => {
@@ -68,16 +84,22 @@ const getMaterials = async (req, res) => {
     const materials = await Material.find(filter).sort({ createdAt: -1 });
     res.status(200).json({ success: true, materials });
   } catch (error) {
-    console.log('err', error.message)
+    console.log("err", error.message);
     res.status(500).json({ success: false, msg: error.message });
   }
 };
 
+// ---------------- GET SINGLE MATERIAL ----------------
 const getMaterial = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const material = await Material.findById(id).sort({ createdAt: -1 });
+    const material = await Material.findById(id);
+    if (!material)
+      return res
+        .status(404)
+        .json({ success: false, msg: "Material not found" });
+
     res.status(200).json({ success: true, material });
   } catch (error) {
     res.status(500).json({ success: false, msg: error.message });
@@ -85,31 +107,92 @@ const getMaterial = async (req, res) => {
 };
 
 // ---------------- DELETE MATERIAL ----------------
+const mongoose = require("mongoose");
+
 const deleteMaterial = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const material = await Material.findByIdAndDelete(id);
+    // validate id
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "Invalid material ID" });
+    }
+
+    // find and delete in one go
+    const material = await Material.findById(id);
+
     if (!material) {
       return res
         .status(404)
         .json({ success: false, msg: "Material not found" });
     }
 
-    // also delete the file if it exists
-    if (material.content) {
-      const filePath = path.join(__dirname, "../uploads/materials", material.content);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    // delete from cloudinary if exists
+    if (material.publicId) {
+      try {
+        await deleteFromCloudinary(material.publicId, material.resourceType);
+      } catch (err) {
+        console.error("Cloudinary delete error:", err.message);
+        // still return success for material deletion
       }
     }
+
+    await material.deleteOne();
 
     res
       .status(200)
       .json({ success: true, msg: "Material deleted successfully" });
   } catch (error) {
+    console.error("Delete material error:", error);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+// ---------------- UPDATE MATERIAL ----------------
+const updateMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const material = await Material.findById(id);
+    if (!material)
+      return res
+        .status(404)
+        .json({ success: false, msg: "Material not found" });
+
+        if (req.file) {
+          const uniqueSuffix = Math.floor(Math.random() * 10e5);
+          const uniqueId = "MarioNation-" + Date.now() + '_' + uniqueSuffix;
+          const result = await uploadToCloudinary(req.file.buffer, "materials", uniqueId);
+        
+          // delete old file
+          if (material.publicId) {
+            await deleteFromCloudinary(material.publicId, material.resourceType || "raw");
+          }
+        
+          material.content = result.secure_url;
+          material.publicId = result.public_id;
+          material.resourceType = result.resource_type; // 🔥 update type
+          material.name = req.body.name || material.name;
+        } else {
+      // only update metadata
+      material.name = req.body.name || material.name;
+      material.type = req.body.type || material.type;
+    }
+
+    await material.save();
+    res.json({ success: true, material });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, msg: error.message });
   }
 };
 
-module.exports = { addMaterial, getMaterials, getMaterial, deleteMaterial };
+module.exports = {
+  addMaterial,
+  getMaterials,
+  getMaterial,
+  deleteMaterial,
+  updateMaterial,
+};

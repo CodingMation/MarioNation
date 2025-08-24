@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaBook, FaSpinner, FaChevronLeft, FaChevronRight, FaPlus, FaTrash, FaEdit, FaFile, FaFolder, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage, FaFileAlt } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
-import fetchApi, { materiallink } from '../../api/fetchApi';
+import fetchApi from '../../api/fetchApi';
 
 const ExerciseDashboard = () => {
     const { chapterId } = useParams();
@@ -197,7 +197,7 @@ const ExerciseDashboard = () => {
                                                 <Link to={`/previewmaterial/${item._id}`}>
                                                     <h3 className="font-semibold text-lg mb-1 hover:underline">{item.type}</h3>
                                                 </Link>
-                                                <p className="text-gray-400 text-xs">
+                                                <p className="text-gray-500 italic text-xs truncate max-w-[150px]">
                                                     {item.content}
                                                 </p>
                                             </div>

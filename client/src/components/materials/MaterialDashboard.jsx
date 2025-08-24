@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaFileAlt, FaImage, FaSpinner, FaChevronLeft, FaChevronRight, FaPlus, FaTrash, FaEdit, FaSearch } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
-import fetchApi, { materiallink } from '../../api/fetchApi';
+import fetchApi from '../../api/fetchApi';
 
 const MaterialDashboard = () => {
     const { exerciseId, chapterId, subjectId } = useParams();
@@ -122,7 +122,7 @@ const MaterialDashboard = () => {
                                 <div className="h-40 w-full relative bg-gradient-to-r from-purple-900 to-blue-800 flex items-center justify-center">
                                     {material.type === 'image' && material.content ? (
                                         <img
-                                            src={`${materiallink}/${material.content}`}
+                                            src={`${material.content}`}
                                             alt="Material"
                                             className="h-full w-full object-cover"
                                         />

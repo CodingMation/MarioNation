@@ -24,6 +24,12 @@ const materialSchema = new mongoose.Schema(
     },
     type: { type: String, enum: ["text", "image", "file"], required: true },
     content: { type: String, required: true },
+    publicId: { type: String },
+    resourceType: {
+      type: String,
+      enum: ["image", "file", "raw"],
+      default: "raw",
+    },    
   },
   { timestamps: true }
 );

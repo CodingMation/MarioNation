@@ -173,7 +173,7 @@ const AddEditMaterial = ({ btnValue, ID, context }) => {
               >
                 <option value="text">Text</option>
                 <option value="image">Image</option>
-                <option value="file">File (PDF/DOC)</option>
+                {/* <option value="file">File (PDF/DOC)</option> */}
               </select>
             </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaBook, FaSpinner, FaChevronLeft, FaChevronRight, FaFilePdf, FaFileWord, FaFileExcel, FaFileAlt } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
-import fetchApi, { materiallink } from '../../api/fetchApi';
+import fetchApi from '../../api/fetchApi';
 
 const UserExercise = () => {
     const { chapterId } = useParams();
@@ -118,7 +118,7 @@ const UserExercise = () => {
                                         ) : (
                                             item.type === 'image' ? (
                                                 <img
-                                                    src={`${materiallink}/${item.content}`}
+                                                    src={`${item.content}`}
                                                     alt={item.type}
                                                     className="h-full w-full object-cover"
                                                     onError={(e) => { e.target.src = "/fallback.png"; }}
