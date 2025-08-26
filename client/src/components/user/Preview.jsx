@@ -8,6 +8,7 @@ import {
   FaFileAlt,
 } from "react-icons/fa";
 import fetchApi from "../../api/fetchApi";
+import ZoomableImage from "./ZoomableImage";
 
 const PreviewMaterial = () => {
   const navigate = useNavigate();
@@ -22,8 +23,6 @@ const PreviewMaterial = () => {
 
   // fetch material on load
   useEffect(() => {
-    if (!token) return navigate("/login");
-
     const fetchMaterial = async () => {
       try {
         setLoading(true);
@@ -53,7 +52,7 @@ const PreviewMaterial = () => {
 
     try {
       let fileName;
-    
+
       if (materialInfo.type === "image") {
         // Extract filename from URL
         const urlParts = materialInfo.content.split("/");
@@ -65,61 +64,62 @@ const PreviewMaterial = () => {
       } else {
         fileName = `download-${Date.now()}`;
       }
-    
+
       // Show confirm dialog with the actual filename
       if (!confirm(`Do you want to download "${fileName}"?`)) return;
-    
+
       if (materialInfo.type === "image") {
         const response = await fetch(materialInfo.content);
         if (!response.ok) throw new Error("Network response was not ok");
-    
+
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
-    
+
         const link = document.createElement("a");
         link.href = blobUrl;
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    
+
         URL.revokeObjectURL(blobUrl);
-    
+
       } else if (materialInfo.type === "text") {
         const blob = new Blob([materialInfo.content], {
           type: "text/plain;charset=utf-8",
         });
         const blobUrl = URL.createObjectURL(blob);
-    
+
         const link = document.createElement("a");
         link.href = blobUrl;
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    
+
         URL.revokeObjectURL(blobUrl);
       }
     } catch (err) {
       console.error("❌ Download failed:", err);
       alert("Download failed. Please try again.");
-    }    
+    }
   };
 
   // fullscreen toggle for images
   const toggleFullscreen = () => {
     if (!document.fullscreenElement && imageRef.current) {
+      // enter fullscreen
       imageRef.current.requestFullscreen().catch((err) => {
         console.error(`Error attempting to enable fullscreen: ${err.message}`);
       });
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
+    } else if (document.fullscreenElement) {
+      // only try to exit if actually in fullscreen
+      document.exitFullscreen().catch((err) => {
+        console.error(`Error attempting to exit fullscreen: ${err.message}`);
+      });
     }
   };
+
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -173,7 +173,8 @@ const PreviewMaterial = () => {
           onClick={() => window.history.back()}
           className="flex items-center text-gray-300 hover:text-white transition-colors px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
         >
-          <FaChevronLeft className="mr-2" /> Back to Materials
+          <FaChevronLeft className="md:mr-2" /> 
+          <span className="hidden md:block">Back to Materials</span>
         </button>
 
         <div className="flex items-center space-x-4">
@@ -187,7 +188,8 @@ const PreviewMaterial = () => {
               className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               title="Download Material"
             >
-              <FaDownload className="mr-2" /> Download
+              <FaDownload className="md:mr-2" /> 
+              <span className="hidden md:block">Download</span>
             </button>
           )}
         </div>
@@ -221,13 +223,16 @@ const PreviewMaterial = () => {
               {materialInfo.content ? (
                 <>
                   <div className="flex justify-center">
-                    <img
-                      ref={imageRef}
-                      src={materialInfo.content}
-                      alt={materialInfo.title || "Material image"}
-                      className="max-h-[40vh] max-w-full object-contain rounded-lg shadow-md"
-                    />
+                    {/* Fullscreen container */}
+                    <div ref={imageRef} className="w-full h-full flex justify-center">
+                      <ZoomableImage
+                        src={materialInfo.content}
+                        alt={materialInfo.title || "Material image"}
+                        zoomEnabled={isFullscreen} // pass a prop
+                      />
+                    </div>
                   </div>
+
                   <div className="flex justify-center mt-4 space-x-3">
                     <button
                       onClick={toggleFullscreen}
@@ -246,6 +251,7 @@ const PreviewMaterial = () => {
               )}
             </div>
           )}
+
 
           {/* Text Preview */}
           {materialInfo.type === "text" && (
